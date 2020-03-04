@@ -22,6 +22,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -35,6 +36,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     LocationManager locationManager;
     LocationListener locationListener;
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -54,7 +56,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.clear();
         if(title!="Your Location")
-        mMap.addMarker(new MarkerOptions().position(userLocation).title(title));
+            mMap.addMarker(new MarkerOptions().position(userLocation).title(title).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+        else
+            mMap.addMarker(new MarkerOptions().position(userLocation).title(title));
+
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 14));
     }
 
@@ -76,6 +81,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMapLongClickListener(this);
 
         Intent intent = getIntent();
+        //position = intent.getIntExtra("placeNumber", 0);
 
         if (intent.getIntExtra("placeNumber", 0) == 0) {
             locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -126,10 +132,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
-//        // Add a marker in Sydney and move the camera
-//        LatLng sydney = new LatLng(-34, 151);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        else
+        {
+            Location placeLocation = new Location(LocationManager.GPS_PROVIDER);
+            placeLocation.setLatitude(MainActivity.locations.get(intent.getIntExtra("placeNumber", 0)).latitude);
+            placeLocation.setLongitude(MainActivity.locations.get(intent.getIntExtra("placeNumber", 0)).longitude);
+
+            centreMapOnLocation(placeLocation, MainActivity.places.get(intent.getIntExtra("placeNumber", 0)));
+
+            mMap.addMarker(new MarkerOptions().position(MainActivity.locations.get(intent.getIntExtra("placeNumber", 0))).title(MainActivity.places.get(intent.getIntExtra("placeNumber", 0))).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+
+        }
+
     }
 
     @Override
@@ -161,9 +176,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         //mMap.clear();
-        mMap.addMarker(new MarkerOptions().position(latLng).title(address));
-        MainActivity.places.add(address);
-        MainActivity.locations.add(latLng);
+        mMap.addMarker(new MarkerOptions().position(latLng).title(address).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+        int position = MainActivity.locations.size();
+
+        Intent intent = new Intent(getApplicationContext(), EnterAddress.class);
+        intent.putExtra("place", address);
+        intent.putExtra("position", position);
+        startActivity(intent);
+
+//        MainActivity.places.add(EnterAddress.finalAddress);
+        MainActivity.locations.set(position, latLng);
+        MainActivity.arrayAdapter.notifyDataSetChanged();
 
         Toast.makeText(this, address + " : Address Added", Toast.LENGTH_SHORT).show();
 
