@@ -2,7 +2,9 @@ package com.example.addaddress;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,6 +14,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,10 +30,43 @@ public class MainActivity extends AppCompatActivity {
 
         ListView listView = (ListView)findViewById(R.id.listView);
 
+        SharedPreferences sharedPreferences = this.getSharedPreferences("com.example.addaddress", Context.MODE_PRIVATE);
+
+        ArrayList<String> latitudes = new ArrayList<>();
+        ArrayList<String> longitudes = new ArrayList<>();
+
+        places.clear();
+        latitudes.clear();;
+        longitudes.clear();
+        locations.clear();
+
+        try {
+
+            places = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("places", ObjectSerializer.serialize(new ArrayList<String>())));
+            latitudes = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("latitudes", ObjectSerializer.serialize(new ArrayList<String>())));
+            longitudes = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("longitudes", ObjectSerializer.serialize(new ArrayList<String>())));
 
 
-        places.add("Add New Address");
-        locations .add(new LatLng(0,0));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if(places.size()>0 && latitudes.size()>0 && longitudes.size()>0)
+        {
+            if(places.size() == latitudes.size() && places.size()==longitudes.size())
+            {
+                for(int i=0; i<places.size(); i++)
+                {
+                    locations.add(new LatLng(Double.parseDouble(latitudes.get(i)),Double.parseDouble(longitudes.get(i))));
+
+                }
+
+            }
+        }
+        else {
+            places.add("Add New Address");
+            locations.add(new LatLng(0, 0));
+        }
 
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, places);
 
